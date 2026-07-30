@@ -30,10 +30,9 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered",
         )
     
-    # Hash the password
     hashed_pwd = get_password_hash(user.password)
 
-    # Create the database user instance
+    # Creating user in database
     new_user = User(
         username=user.username,
         email=user.email,

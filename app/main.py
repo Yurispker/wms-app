@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from app.database import engine, Base
 from app.products.models import Product
 from app.users.models import User
@@ -10,16 +11,13 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="WMS Backend",
     description="A Warehouse Management System Backend API to manage inventory, orders, and shipments.",
-    version="0.0.1",
+    version="0.1.0",
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1}
 )
 
 app.include_router(product_router)
 app.include_router(user_router)
 
-@app.get("/")
-def read_root():
-    return{
-        "status": "healthy",
-        "system": "WMS Backend API",
-        "message": "Welcome to the WMS Backend API. Use the /docs endpoint to explore the available API endpoints and their documentation."
-    }
+@app.get("/", include_in_schema=False)
+def redirect_to_docs():
+    return RedirectResponse(url="/docs")
