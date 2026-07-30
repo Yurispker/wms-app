@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from app.database import engine, Base
-from app.products.models import Product
-from app.users.models import User
-from app.products.routers import router as product_router
-from app.users.routers import router as user_router
+from app.models.products import Product
+from app.models.users import User
+from app.api.router import api_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -15,8 +14,7 @@ app = FastAPI(
     swagger_ui_parameters={"defaultModelsExpandDepth": -1}
 )
 
-app.include_router(product_router)
-app.include_router(user_router)
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/", include_in_schema=False)
 def redirect_to_docs():

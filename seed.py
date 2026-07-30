@@ -1,7 +1,7 @@
 # seed.py
 from app.database import Base, engine, sessionLocal
-from app.products.models import Product
-from app.users.models import User
+from app.models.products import Product
+from app.models.users import User
 from app.security import get_password_hash  
 
 

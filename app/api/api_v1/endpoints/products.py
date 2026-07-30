@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.products.models import Product
-from app.products.schemas import InventoryAdjust, InventoryUpdate, ProductCreate, ProductResponse, LocationUpdate
+from app.models.products import Product
+from app.schemas.products import InventoryAdjust, InventoryUpdate, ProductCreate, ProductResponse, LocationUpdate
 
-router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter()
 
 
 @router.post("/", response_model=ProductResponse, responses={400: 

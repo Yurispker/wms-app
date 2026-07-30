@@ -14,7 +14,7 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 # Find Token
-OAuth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+OAuth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
 def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
