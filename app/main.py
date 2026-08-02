@@ -4,8 +4,11 @@ from app.database import engine, Base
 from app.models.products import Product
 from app.models.users import User
 from app.api.router import api_router
+from app.seed import reset_and_seed
 
 Base.metadata.create_all(bind=engine)
+
+reset_and_seed()  # Reset and seed the database on startup
 
 app = FastAPI(
     title="WMS Backend",
