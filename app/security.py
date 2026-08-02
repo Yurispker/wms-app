@@ -6,12 +6,16 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
+from app.schemas.enums import UserRole
 
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not set in environment variables!")
 
 # Find Token
 OAuth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
@@ -31,20 +35,36 @@ def create_access_token(data: dict) -> str:
 
 # HTTPException for invalid credentials
 credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
+    status_code= 401,
     detail="Could not validate credentials",
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-def get_current_user(token: str = Depends(OAuth2_scheme)) -> str:
-    #Validates the incoming JWT token. If valid, returns the username
-    
+def get_current_user(token: str = Depends(OAuth2_scheme)) -> dict:
+    """Decodes JWT and returns dict containing username and role."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        if username is None:
+        role: str = payload.get("role")
+        if username is None or role is None:
             raise credentials_exception
     except InvalidTokenError:
         raise credentials_exception
         
-    return username
+    return {"username": username, "role": role}
+
+class RequireRole:
+    """Dependency guard to restrict route access by role."""
+    def __init__(self, allowed_roles: list[UserRole]):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: dict = Depends(get_current_user)):
+        user_role = current_user.get("role")
+        allowed_values = [r.value for r in self.allowed_roles]
+        
+        if user_role not in allowed_values:
+            raise HTTPException(
+                status_code= 403,
+                detail="Operation not permitted: Insufficient role privileges."
+            )
+        return current_user

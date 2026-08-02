@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.products import Product
 from app.schemas.products import InventoryAdjust, InventoryUpdate, ProductCreate, ProductResponse, LocationUpdate
+from app.schemas.enums import UserRole
+from app.security import RequireRole
 
 router = APIRouter()
 
@@ -23,7 +25,7 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     # Check if a product with the same SKU already exists in the database
     existing_product = db.query(Product).filter(Product.sku == product.sku).first()
     if existing_product:
-        raise HTTPException(status_code=400, detail=f"Product with SKU '{product.sku}' already exists.")
+        raise HTTPException(status_code= 400, detail=f"Product with SKU '{product.sku}' already exists.")
     
     db_product = Product(sku=product.sku, 
                          name=product.name, 
@@ -66,7 +68,8 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 def set_product_inventory(
     sku: str, 
     update_data: InventoryUpdate, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
     """Directly set the inventory count for a product."""
     product = db.query(Product).filter(Product.sku == sku).first()

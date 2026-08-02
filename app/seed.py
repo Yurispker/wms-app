@@ -3,6 +3,7 @@ from app.database import Base, engine, sessionLocal
 from app.models.products import Product
 from app.models.users import User
 from app.security import get_password_hash  
+from app.schemas.enums import UserRole
 
 
 def reset_and_seed():
@@ -26,6 +27,21 @@ def reset_and_seed():
                 email="admin@wms.local",
                 hashed_password=get_password_hash("admin123"),
                 is_active=True,
+                role=UserRole.ADMIN
+            ),
+            User(
+                username="manager",
+                email="manager@wms.local",
+                hashed_password=get_password_hash("manager123"),
+                is_active=True,
+                role=UserRole.MANAGER
+            ),
+            User(
+                username="picker1",
+                email="picker1@wms.local",
+                hashed_password=get_password_hash("picker123"),
+                is_active=True,
+                role=UserRole.PICKER
             ),
         ]
         

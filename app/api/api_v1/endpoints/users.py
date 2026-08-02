@@ -2,14 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.users import User
+from app.models.users import User, UserRole
 from app.schemas.users import UserCreate, UserResponse, Token, cleanLoginForm
-from app.security import get_password_hash, verify_password, create_access_token, get_current_user
+from app.security import get_password_hash, verify_password, create_access_token, get_current_user, RequireRole
 
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN]))
+    ):
 
     # Check if username already exists
     existing_username = db.query(User).filter(User.username == user.username).first()
@@ -39,11 +43,14 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    print(f"User '{user.username}' created by admin: {current_user.get('username')}")
+    
     return new_user
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
-    form_data: dict = Depends(cleanLoginForm.as_form),
+    form_data: cleanLoginForm = Depends(cleanLoginForm.as_form),
     db: Session = Depends(get_db)
 ):
     # Look up user
@@ -56,14 +63,19 @@ def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # Generate access tokens
-    access_token = create_access_token(data={"sub": user.username})
+
+    # Generate access token
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "role": user.role.value if hasattr(user.role, 'value') else user.role
+        }
+    )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me")
 def read_users_me(current_user: str = Depends(get_current_user)):
-    """A protected route that only logged-in users can see."""
+    """A protected showing logged in user details & roles."""
     return {"logged_in_as": current_user}
 
