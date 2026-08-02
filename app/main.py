@@ -4,8 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models.products import Product
 from app.models.users import User
-from app.api.router import api_router
-from app.seed import reset_and_seed
+from app.api.api_v1.router import api_router
 
 Base.metadata.create_all(bind=engine)
 

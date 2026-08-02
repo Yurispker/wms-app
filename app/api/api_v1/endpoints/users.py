@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.users import User, UserRole
-from app.schemas.users import UserCreate, UserResponse, Token, cleanLoginForm
+from app.schemas.users import UserCreate, UserResponse, Token
 from app.security import get_password_hash, verify_password, create_access_token, get_current_user, RequireRole
 
 router = APIRouter()
@@ -38,6 +38,7 @@ def register_user(
         username=user.username,
         email=user.email,
         hashed_password=hashed_pwd,
+        role = user.role,
     )
 
     db.add(new_user)
@@ -45,12 +46,12 @@ def register_user(
     db.refresh(new_user)
 
     print(f"User '{user.username}' created by admin: {current_user.get('username')}")
-    
+
     return new_user
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
-    form_data: cleanLoginForm = Depends(cleanLoginForm.as_form),
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     # Look up user
@@ -59,10 +60,13 @@ def login_for_access_token(
     # Validate user existence and password
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code= 401,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user account")
 
     # Generate access token
     access_token = create_access_token(

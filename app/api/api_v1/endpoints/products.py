@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models.products import Product
 from app.schemas.products import InventoryAdjust, InventoryUpdate, ProductCreate, ProductResponse, LocationUpdate
 from app.schemas.enums import UserRole
-from app.security import RequireRole
+from app.security import RequireRole, get_current_user
 
 router = APIRouter()
 
@@ -20,7 +20,11 @@ router = APIRouter()
 )
 
 
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+def create_product(
+    product: ProductCreate, 
+    db: Session = Depends(get_db), 
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
+    ):
 
     # Check if a product with the same SKU already exists in the database
     existing_product = db.query(Product).filter(Product.sku == product.sku).first()
@@ -42,13 +46,18 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 
 # Get all products
 @router.get("/", response_model=list[ProductResponse])
-def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_products(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db), 
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
+    ):
     products = db.query(Product).offset(skip).limit(limit).all()
     return products
 
 # Get a product by SKU
 @router.get("/sku/{sku}", response_model=ProductResponse)
-def get_product_by_sku(sku: str, db: Session = Depends(get_db)):
+def get_product_by_sku(sku: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     product = db.query(Product).filter(Product.sku == sku).first()
     if not product:
         raise HTTPException(
@@ -57,7 +66,7 @@ def get_product_by_sku(sku: str, db: Session = Depends(get_db)):
 
 # Get a product by ID
 @router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+def get_product(product_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail=f"Product with ID {product_id} not found")
@@ -81,6 +90,7 @@ def set_product_inventory(
     product.inventory = update_data.inventory
     db.commit()
     db.refresh(product)
+    print(f"Inventory for SKU '{sku}' adjusted by {update_data.inventory}. New inventory: {product.inventory}. Adjusted by user: {current_user.get('username')}")
     return product
 
 
@@ -89,7 +99,8 @@ def set_product_inventory(
 def adjust_product_inventory(
     sku: str, 
     adjustment: InventoryAdjust, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
     """
     Adjust inventory by a relative amount.
@@ -113,13 +124,16 @@ def adjust_product_inventory(
     product.inventory = new_inventory
     db.commit()
     db.refresh(product)
+
+    print(f"Inventory for SKU '{sku}' adjusted by {adjustment.amount}. New inventory: {product.inventory}. Adjusted by user: {current_user.get('username')}")
     return product
 
-@router.patch("/sku/{sku}/location", response_model=ProductResponse)
+@router.patch("/{sku}/location", response_model=ProductResponse)
 def update_product_location(
     sku: str, 
     location_data: LocationUpdate, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
     """Update where a product is physically stored in the warehouse."""
     product = db.query(Product).filter(Product.sku == sku).first()
@@ -138,4 +152,7 @@ def update_product_location(
 
     db.commit()
     db.refresh(product)
+
+    print(f"Location for SKU '{sku}' updated to Aisle: {product.aisle}, Rack: {product.rack}, Shelf: {product.shelf}. Updated by user: {current_user.get('username')}")
+
     return product

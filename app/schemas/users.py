@@ -1,17 +1,19 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from fastapi import Form
+from app.schemas.enums import UserRole
 
 class UserCreate(BaseModel):
-    username: str
+    username: str = Field(..., min_length=3, max_length=20)
     email: str
-    password: str
+    password: str = Field(..., min_length=6, max_length=25)
+    role: UserRole = UserRole.PICKER  # Default role is PICKER
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
     is_active: bool
-    role: str
+    role: UserRole
 
     class Config:
         from_attributes = True
@@ -22,15 +24,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-
-class cleanLoginForm(BaseModel):
-    username: str
-    password: str
-    # Cleaning up the login form
-    @classmethod
-    def as_form(
-        cls,
-        username: str = Form(..., description="The username of the user"),
-        password: str = Form(..., description="The password of the user")
-    ):
-        return cls(username=username, password=password)
