@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # Create a product
 class ProductCreate(BaseModel):
@@ -8,16 +8,15 @@ class ProductCreate(BaseModel):
     quantity: int = Field(default=0, ge=0)  # Quantity must be a non-negative integer
 
     # Racking location fields
-    aisle: str | None = Field(default=None, example="Aisle 4")
-    rack: str | None = Field(default=None, example="Rack 02")
-    shelf: str | None = Field(default=None, example="Shelf B")
+    aisle: str | None = Field(default=None, examples=["Aisle 4"])
+    rack: str | None = Field(default=None, examples=["Rack 02"])
+    shelf: str | None = Field(default=None, examples=["Shelf B"])
 
 # Fetch a product
 class ProductResponse(ProductCreate):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Schema for directly setting inventory (e.g., setting inventory to 50)
 class InventoryUpdate(BaseModel):
@@ -28,6 +27,6 @@ class InventoryAdjust(BaseModel):
     amount: int = Field(description="Positive integer to restock, negative integer to reduce")
 
 class LocationUpdate(BaseModel):
-    aisle: str | None = Field(default=None, example="Aisle 4")
-    rack: str | None = Field(default=None, example="Rack 02")
-    shelf: str | None = Field(default=None, example="Shelf B")
+    aisle: str | None = Field(default=None, examples=["Aisle 4"])
+    rack: str | None = Field(default=None, examples=["Rack 02"])
+    shelf: str | None = Field(default=None, examples=["Shelf B"])

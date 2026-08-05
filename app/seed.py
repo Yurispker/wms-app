@@ -57,7 +57,7 @@ def reset_and_seed():
                 sku="A1",
                 name="Alpha1",
                 description="2.4GHz Optical Mouse",
-                inventory=50,
+                quantity=50,
                 aisle="Aisle 1",
                 rack="Rack A",
                 shelf="Shelf 3"
@@ -66,7 +66,7 @@ def reset_and_seed():
                 sku="A2",
                 name="Alpha2",
                 description="RGB Backlit Blue Switches",
-                inventory=25,
+                quantity=25,
                 aisle="Aisle 2",
                 rack="Rack C",
                 shelf="Shelf 1"
@@ -75,7 +75,7 @@ def reset_and_seed():
                 sku="A3",
                 name="Alpha3",
                 description="IPS Panel with USB-C Hub",
-                inventory=10,
+                quantity=10,
                 aisle="Aisle 5",
                 rack="Rack B",
                 shelf="Shelf 2"
@@ -84,7 +84,7 @@ def reset_and_seed():
                 sku="A4",
                 name="Alpha4",
                 description="Wireless Bluetooth Laser Scanner",
-                inventory=100,
+                quantity=100,
                 aisle="Aisle 1",
                 rack="Rack B",
                 shelf="Shelf 4"

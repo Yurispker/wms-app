@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from fastapi import Form
 from app.schemas.enums import UserRole
 
@@ -12,15 +12,14 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    is_active: bool = True
+    is_active: bool
     role: UserRole
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 class TokenData(BaseModel):
     username: str | None = None

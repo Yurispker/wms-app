@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.products import Product
@@ -9,7 +9,7 @@ from app.security import RequireRole, get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=ProductResponse, responses={400: 
+@router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED,responses={400: 
     {"description": "Bad request - Duplicate SKU detected",
      "content":
         {"application/json": {"example": {"detail": "Product with SKU '12345' already exists."}
@@ -34,7 +34,7 @@ def create_product(
     db_product = Product(sku=product.sku, 
                          name=product.name, 
                          description=product.description, 
-                         inventory=product.inventory, 
+                         quantity=product.quantity, 
                          aisle=product.aisle,
                          rack=product.rack,
                          shelf=product.shelf)
@@ -90,7 +90,7 @@ def set_product_inventory(
     product.quantity = update_data.quantity
     db.commit()
     db.refresh(product)
-    print(f"Inventory for SKU '{sku}' adjusted by {update_data.inventory}. New inventory: {product.inventory}. Adjusted by user: {current_user.get('username')}")
+    print(f"Inventory for SKU '{sku}' adjusted by {update_data.quantity}. New quantity: {product.quantity}. Adjusted by user: {current_user.get('username')}")
     return product
 
 
@@ -116,9 +116,9 @@ def adjust_product_inventory(
     new_quantity = product.quantity + adjustment.amount
 
     # Safety check: prevent negative stock
-    if new_inventory < 0:
+    if new_quantity < 0:
         raise HTTPException(
-            status_code= 400, detail=f"Insufficient inventory. Current: {product.inventory}, requested reduction: {abs(adjustment.amount)}"
+            status_code= 400, detail=f"Insufficient quantity. Current: {product.quantity}, requested reduction: {abs(adjustment.amount)}"
         )
 
     product.quantity = new_quantity

@@ -6,6 +6,10 @@ from app.models.products import Product
 from app.models.users import User
 from app.api.api_v1.router import api_router
 
+import app.models.products
+import app.models.users
+import app.models.orders
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
