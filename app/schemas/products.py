@@ -2,10 +2,10 @@ from pydantic import BaseModel, Field
 
 # Create a product
 class ProductCreate(BaseModel):
-    sku: str
-    name: str
+    sku: str = Field(..., min_length=1, max_length=50, description="SKU of the product")
+    name: str =Field(..., min_length=1, max_length=100, description="Name of the product")
     description: str | None = None
-    inventory: int = Field(default=0, ge=0)  # Inventory must be a non-negative integer
+    quantity: int = Field(default=0, ge=0)  # Quantity must be a non-negative integer
 
     # Racking location fields
     aisle: str | None = Field(default=None, example="Aisle 4")

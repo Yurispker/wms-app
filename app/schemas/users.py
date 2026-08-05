@@ -12,7 +12,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    is_active: bool
+    is_active: bool = True
     role: UserRole
 
     class Config:

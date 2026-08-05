@@ -80,14 +80,14 @@ def set_product_inventory(
     db: Session = Depends(get_db),
     current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
-    """Directly set the inventory count for a product."""
+    # Directly set the inventory count for a product
     product = db.query(Product).filter(Product.sku == sku).first()
     if not product:
         raise HTTPException(
             status_code= 404, detail=f"Product with SKU {sku} not found"
         )
     
-    product.inventory = update_data.inventory
+    product.quantity = update_data.quantity
     db.commit()
     db.refresh(product)
     print(f"Inventory for SKU '{sku}' adjusted by {update_data.inventory}. New inventory: {product.inventory}. Adjusted by user: {current_user.get('username')}")
@@ -102,18 +102,18 @@ def adjust_product_inventory(
     db: Session = Depends(get_db),
     current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
-    """
-    Adjust inventory by a relative amount.
+
+    """Adjust inventory by a relative amount.
     - Positive amount (+10): Restocks inventory.
-    - Negative amount (-5): Deducts inventory.
-    """
+    - Negative amount (-5): Deducts inventory."""
+
     product = db.query(Product).filter(Product.sku == sku).first()
     if not product:
         raise HTTPException(
             status_code = 404, detail=f"Product with SKU {sku} not found"
         )
 
-    new_inventory = product.inventory + adjustment.amount
+    new_quantity = product.quantity + adjustment.amount
 
     # Safety check: prevent negative stock
     if new_inventory < 0:
@@ -121,11 +121,11 @@ def adjust_product_inventory(
             status_code= 400, detail=f"Insufficient inventory. Current: {product.inventory}, requested reduction: {abs(adjustment.amount)}"
         )
 
-    product.inventory = new_inventory
+    product.quantity = new_quantity
     db.commit()
     db.refresh(product)
 
-    print(f"Inventory for SKU '{sku}' adjusted by {adjustment.amount}. New inventory: {product.inventory}. Adjusted by user: {current_user.get('username')}")
+    print(f"Inventory for SKU '{sku}' adjusted by {adjustment.amount}. New quantity: {product.quantity}. Adjusted by user: {current_user.get('username')}")
     return product
 
 @router.patch("/{sku}/location", response_model=ProductResponse)
@@ -135,7 +135,7 @@ def update_product_location(
     db: Session = Depends(get_db),
     current_user: dict = Depends(RequireRole([UserRole.ADMIN, UserRole.MANAGER]))
 ):
-    """Update where a product is physically stored in the warehouse."""
+    # Update where a product is physically stored in the warehouse
     product = db.query(Product).filter(Product.sku == sku).first()
     if not product:
         raise HTTPException(

@@ -3,12 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.users import User, UserRole
-from app.schemas.users import UserCreate, UserResponse, Token
+from app.schemas.users import UserCreate, UserResponse
 from app.security import get_password_hash, verify_password, create_access_token, get_current_user, RequireRole
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code= 201)
 def register_user(
     user: UserCreate,
     db: Session = Depends(get_db),
@@ -19,7 +19,7 @@ def register_user(
     existing_username = db.query(User).filter(User.username == user.username).first()
     if existing_username:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code= 400,
             detail="Username already registered",
         )
     
@@ -27,7 +27,7 @@ def register_user(
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code= 400,
             detail="Email already registered",
         )
     
@@ -80,6 +80,5 @@ def login_for_access_token(
 
 @router.get("/me")
 def read_users_me(current_user: str = Depends(get_current_user)):
-    """A protected showing logged in user details & roles."""
     return {"logged_in_as": current_user}
 
